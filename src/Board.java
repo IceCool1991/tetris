@@ -74,7 +74,7 @@ public class Board extends JPanel implements ActionListener {
         cleanBoard();
         deltaTime = 500;
         currentShape = null; 
-        currentRow = 0;
+        currentRow = -2;
         currentCol = NUM_COLS / 2;
     }
 
@@ -123,7 +123,7 @@ public class Board extends JPanel implements ActionListener {
         int[][] squaresArray = currentShape.getCoordnates();
         for (int point = 0; point <= 3; point++) {
             drawSquare(g, currentRow + squaresArray[point][1],
-                    currentCol + squaresArray[point][0], Tetrominoes.ZShape);
+                    currentCol + squaresArray[point][0], currentShape.getShape());
         }
     }
 
