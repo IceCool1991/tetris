@@ -2,6 +2,8 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import javax.swing.*;
 
 /*
@@ -15,6 +17,35 @@ import javax.swing.*;
  */
 public class Board extends JPanel implements ActionListener {
 
+    class MyKeyAdapter extends KeyAdapter {
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_LEFT:
+                    if (canMoveTo(currentRow, currentCol - 1)) {
+                        currentCol --;
+                    }
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    if (canMoveTo(currentRow, currentCol + 1)) {
+                        currentCol ++;
+                    }
+                    break;
+                case KeyEvent.VK_UP:
+
+                    break;
+                case KeyEvent.VK_DOWN:
+                    currentRow ++;
+                    break;
+                default:
+                    break;
+
+            }
+            repaint();
+        }
+    }
+
     public static final int NUM_ROWS = 22;
     public static final int NUM_COLS = 10;
 
@@ -27,24 +58,30 @@ public class Board extends JPanel implements ActionListener {
     private int currentCol;
 
     private Timer timer;
+    
+    MyKeyAdapter myKeyAdapter;
 
     public Board() {
         super();
         matrix = new Tetrominoes[NUM_ROWS][NUM_COLS];
-        timer = new Timer(deltaTime, this);
         initValues();
+        timer = new Timer(deltaTime, this);
+        myKeyAdapter = new MyKeyAdapter();
     }
 
     public void initValues() {
+        setFocusable(true);
         cleanBoard();
         deltaTime = 500;
-        currentShape = new Shape();
+        currentShape = null; 
         currentRow = 0;
         currentCol = NUM_COLS / 2;
     }
 
     public void initGame() {
         initValues();
+        currentShape = new Shape();
+        addKeyListener(myKeyAdapter);
         timer.start();
     }
 
@@ -55,18 +92,39 @@ public class Board extends JPanel implements ActionListener {
             }
         }
     }
+    
+    private boolean canMoveTo(int newRow, int newCol) {
+        if ((newCol + currentShape.getXmin()<0) ||
+            (newCol + currentShape.getXmax()>=NUM_COLS))   {
+            return false;
+        }
+        return true;
+            
+    }
 
     // Game Main Loop
     @Override
     public void actionPerformed(ActionEvent ae) {
-
+        currentRow++;
+        repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         //drawBoard(g);
-        drawCurrentShape(g);
+        if (currentShape != null) {
+            drawCurrentShape(g);
+        }
+        
+    }
+
+    private void drawCurrentShape(Graphics g) {
+        int[][] squaresArray = currentShape.getCoordnates();
+        for (int point = 0; point <= 3; point++) {
+            drawSquare(g, currentRow + squaresArray[point][1],
+                    currentCol + squaresArray[point][0], Tetrominoes.ZShape);
+        }
     }
 
     private void drawSquare(Graphics g, int row, int col, Tetrominoes shape) {
@@ -92,11 +150,11 @@ public class Board extends JPanel implements ActionListener {
                 y + squareHeight() - 1,
                 x + squareWidth() - 1, y + 1);
     }
-    
+
     private int squareWidth() {
         return getWidth() / NUM_COLS;
     }
-    
+
     private int squareHeight() {
         return getHeight() / NUM_ROWS;
     }
