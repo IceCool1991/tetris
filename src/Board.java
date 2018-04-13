@@ -24,19 +24,22 @@ public class Board extends JPanel implements ActionListener {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
                     if (canMoveTo(currentRow, currentCol - 1)) {
-                        currentCol --;
+                        currentCol--;
                     }
                     break;
                 case KeyEvent.VK_RIGHT:
                     if (canMoveTo(currentRow, currentCol + 1)) {
-                        currentCol ++;
+                        currentCol++;
                     }
                     break;
                 case KeyEvent.VK_UP:
 
                     break;
                 case KeyEvent.VK_DOWN:
-                    currentRow ++;
+                    if (canMoveTo(currentRow + 1, currentCol)) {
+                        currentRow++;
+                    }
+
                     break;
                 default:
                     break;
@@ -58,8 +61,10 @@ public class Board extends JPanel implements ActionListener {
     private int currentCol;
 
     private Timer timer;
-    
+
     MyKeyAdapter myKeyAdapter;
+
+    public static final int INIT_ROW = -2;
 
     public Board() {
         super();
@@ -73,8 +78,8 @@ public class Board extends JPanel implements ActionListener {
         setFocusable(true);
         cleanBoard();
         deltaTime = 500;
-        currentShape = null; 
-        currentRow = -2;
+        currentShape = null;
+        currentRow = INIT_ROW;
         currentCol = NUM_COLS / 2;
     }
 
@@ -92,31 +97,81 @@ public class Board extends JPanel implements ActionListener {
             }
         }
     }
-    
+
     private boolean canMoveTo(int newRow, int newCol) {
-        if ((newCol + currentShape.getXmin()<0) ||
-            (newCol + currentShape.getXmax()>=NUM_COLS))   {
+        if ((newCol + currentShape.getXmin() < 0)
+                || (newCol + currentShape.getXmax() >= NUM_COLS)
+                || (newRow + currentShape.getYmax() >= NUM_ROWS) 
+                || hitWithMatrix(newRow, newCol)) {
             return false;
         }
         return true;
-            
+
     }
+    
+    private boolean hitWithMatrix(int newRow, int newCol) {
+        int[][] squaresArray = currentShape.getCoordnates();
+        for (int point = 0; point <= 3; point++) {
+            int row = newRow + squaresArray[point][1];
+            int col = newCol + squaresArray[point][0];
+            if (row >= 0) {
+                if (matrix[row][col] != Tetrominoes.NoShape) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    
 
     // Game Main Loop
     @Override
     public void actionPerformed(ActionEvent ae) {
-        currentRow++;
-        repaint();
+        if (canMoveTo(currentRow + 1, currentCol)) {
+            currentRow++;
+            repaint();
+        } else {
+            moveCurrentShapeToMatrix();
+            currentShape = new Shape();
+            currentRow = INIT_ROW;
+            currentCol = NUM_COLS / 2;
+        }
+
+    }
+
+    private void moveCurrentShapeToMatrix() {
+        int[][] squaresArray = currentShape.getCoordnates();
+        for (int point = 0; point <= 3; point++) {
+            int row = currentRow + squaresArray[point][1];
+            int col = currentCol + squaresArray[point][0];
+            matrix[row][col] = currentShape.getShape();
+        }
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        //drawBoard(g);
+        drawBoard(g);
         if (currentShape != null) {
             drawCurrentShape(g);
         }
-        
+        drawBorder(g);
+
+    }
+
+    public void drawBorder(Graphics g) {
+        g.setColor(Color.red);
+        g.drawRect(0, 0, NUM_COLS * squareWidth(),
+                NUM_ROWS * squareHeight());
+    }
+
+    public void drawBoard(Graphics g) {
+        for (int row = 0; row < NUM_ROWS; row++) {
+            for (int col = 0; col < NUM_COLS; col++) {
+                drawSquare(g, row, col, matrix[row][col]);
+            }
+        }
     }
 
     private void drawCurrentShape(Graphics g) {
