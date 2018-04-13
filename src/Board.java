@@ -23,20 +23,24 @@ public class Board extends JPanel implements ActionListener {
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
-                    if (canMoveTo(currentRow, currentCol - 1)) {
+                    if (canMoveTo(currentShape, currentRow, currentCol - 1)) {
                         currentCol--;
                     }
                     break;
                 case KeyEvent.VK_RIGHT:
-                    if (canMoveTo(currentRow, currentCol + 1)) {
+                    if (canMoveTo(currentShape, currentRow, currentCol + 1)) {
                         currentCol++;
                     }
                     break;
                 case KeyEvent.VK_UP:
-
+                    Shape rotShape = currentShape.rotateRight();
+                    if (canMoveTo(rotShape, currentRow, currentCol)) {
+                        System.out.println("rotated");
+                        currentShape = rotShape;
+                    }
                     break;
                 case KeyEvent.VK_DOWN:
-                    if (canMoveTo(currentRow + 1, currentCol)) {
+                    if (canMoveTo(currentShape, currentRow + 1, currentCol)) {
                         currentRow++;
                     }
 
@@ -98,19 +102,18 @@ public class Board extends JPanel implements ActionListener {
         }
     }
 
-    private boolean canMoveTo(int newRow, int newCol) {
-        if ((newCol + currentShape.getXmin() < 0)
-                || (newCol + currentShape.getXmax() >= NUM_COLS)
-                || (newRow + currentShape.getYmax() >= NUM_ROWS) 
-                || hitWithMatrix(newRow, newCol)) {
+    private boolean canMoveTo(Shape shape, int newRow, int newCol) {
+        if ((newCol + shape.getXmin() < 0)
+                || (newCol + shape.getXmax() >= NUM_COLS)
+                || (newRow + shape.getYmax() >= NUM_ROWS) 
+                || hitWithMatrix(shape, newRow, newCol)) {
             return false;
         }
         return true;
-
     }
     
-    private boolean hitWithMatrix(int newRow, int newCol) {
-        int[][] squaresArray = currentShape.getCoordnates();
+    private boolean hitWithMatrix(Shape shape, int newRow, int newCol) {
+        int[][] squaresArray = shape.getCoordnates();
         for (int point = 0; point <= 3; point++) {
             int row = newRow + squaresArray[point][1];
             int col = newCol + squaresArray[point][0];
@@ -128,7 +131,7 @@ public class Board extends JPanel implements ActionListener {
     // Game Main Loop
     @Override
     public void actionPerformed(ActionEvent ae) {
-        if (canMoveTo(currentRow + 1, currentCol)) {
+        if (canMoveTo(currentShape, currentRow + 1, currentCol)) {
             currentRow++;
             repaint();
         } else {
